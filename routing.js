@@ -1,19 +1,43 @@
-// Description: This file contains the routing logic for the application.
-// It will be used to route the incoming requests to the appropriate handler functions.
+/**
+ * @module routing
+ * @param {http.IncomingMessage} request
+ * @param {http.ServerResponse} response
+ */
 
-const data = require('./data.js');
+
+// const data = require('./data.js');
 const http = require('http');
+const Response = require('./response.js');
+
+const data = [];
+
+const { Task } = require('./task.js');
+const { TaskStatus } = require('./task.js');
+
+const task = new Task(
+    title='Task 1',
+    description='Description of task 1',
+    dueDate=1735779098988.348,
+    status=TaskStatus.NOT_STARTED
+)
+
+data.push(task);
 
 const handleRouting = (request, response) => {
 
     switch (request.method) {
         case 'GET':
-            if (data.length > 0) {
+            let taskResponse;
+            if (request.url.endsWith('/tasks')) {
                 response.setHeader('Content-Type', 'application/json');
                 response.writeHead(200);
-                response.write(JSON.stringify({
-                    status: http.STATUS_CODES[200], data: data.map( task => task.getTask() )
-                }));
+                taskResponse = new Response(
+                    request,
+                    200,
+                    'Data retrieved successfully',
+                    data.map(task => task.getTask())
+                )
+                response.write(JSON.stringify(taskResponse.getResponse()));
             }
             response.end();
             break;
@@ -36,4 +60,5 @@ const handleRouting = (request, response) => {
     }
 };
 
-module.exports = handleRouting;
+module.exports.handleRouting = handleRouting;
+module.exports.data = data;

@@ -5,7 +5,7 @@
 // Importing the http module to create a server
 const http = require('http');
 const url = require('url');
-const handleRouting = require('./routing');
+const { handleRouting } = require('./routing');
 
 // Load the environment variables
 require('dotenv').config();
