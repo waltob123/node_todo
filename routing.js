@@ -1,12 +1,10 @@
 /**
  * @module routing
- * @param {http.IncomingMessage} request
- * @param {http.ServerResponse} response
+ * @type {Response|{}}
  */
 
 
 // const data = require('./data.js');
-const http = require('http');
 const Response = require('./response.js');
 
 const data = [];
@@ -23,12 +21,18 @@ const task = new Task(
 
 data.push(task);
 
+/**
+ * Handle routing for the application
+ * @param request
+ * @param response
+ */
 const handleRouting = (request, response) => {
+    const urlPaths = request.url.split('/');
 
     switch (request.method) {
         case 'GET':
             let taskResponse;
-            if (request.url.endsWith('/tasks')) {
+            if (urlPaths[1] === 'tasks' && urlPaths.length === 2) {
                 response.setHeader('Content-Type', 'application/json');
                 response.writeHead(200);
                 taskResponse = new Response(
@@ -38,11 +42,51 @@ const handleRouting = (request, response) => {
                     data.map(task => task.getTask())
                 )
                 response.write(JSON.stringify(taskResponse.getResponse()));
+            } else if ( request.url.split('/').length > 2) {
+                if (Boolean(urlPaths[2])) {
+                    const taskId = parseInt(urlPaths[2]);
+                    const task = data.find( task => task.id === taskId);
+                    if (task) {
+                        response.setHeader('Content-Type', 'application/json');
+                        response.writeHead(200);
+                        taskResponse = new Response(
+                            request,
+                            200,
+                            'Data retrieved successfully',
+                            task.getTask()
+                        )
+                        response.write(JSON.stringify(taskResponse.getResponse()));
+                    } else {
+                        response.writeHead(404);
+                        taskResponse = new Response(
+                            request,
+                            404,
+                            'Task not found',
+                            {}
+                        )
+                        response.write(JSON.stringify(taskResponse.getResponse()));
+                    }
+                }
             }
             response.end();
             break;
         case 'POST':
-            console.log('POST request');
+            if (urlPaths[1] === 'tasks' && urlPaths.length === 2) {
+                request.on('data', chunk => {
+                    const { title, description, dueDate, status } = JSON.parse(chunk);
+                    const task = new Task(title, description, dueDate, status);
+                    data.push(task);
+                });
+                response.setHeader('Content-Type', 'application/json');
+                response.writeHead(201);
+                const taskResponse = new Response(
+                    request,
+                    201,
+                    'Task created successfully',
+                    task.getTask()
+                )
+                response.write(JSON.stringify(taskResponse.getResponse()));
+            }
             response.end();
             break;
         case 'PUT':

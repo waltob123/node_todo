@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3000;
 const REQUIRED_PATH_NAMES = ['tasks']
 
 const server = http.createServer( (request, response) => {
-    if (REQUIRED_PATH_NAMES.some( pathName => url.parse(request.url).pathname === `/${pathName}`)) {
+    if (REQUIRED_PATH_NAMES.some( pathName => request.url.split('/')[1] === `${pathName}`)) {
         handleRouting(request, response);
     } else {
         response.writeHead(404, { 'Content-Type': 'application/json' });
