@@ -81,10 +81,11 @@ class Task {
         this.#deletedAt = null;
     }
 
-    update ( title, description, dueDate ) {
+    update ( title, description, dueDate, status ) {
         this.#title = title;
         this.#description = description;
-        this.#dueDate = dueDate;
+        this.#dueDate = new Date(dueDate);
+        this.#status = status;
         this.#updatedAt = new Date();
     }
 

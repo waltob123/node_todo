@@ -12,14 +12,14 @@ const data = [];
 const { Task } = require('./task.js');
 const { TaskStatus } = require('./task.js');
 
-const task = new Task(
-    title='Task 1',
-    description='Description of task 1',
-    dueDate=1735779098988.348,
-    status=TaskStatus.NOT_STARTED
-)
-
-data.push(task);
+// const task = new Task(
+//     title='Task 1',
+//     description='Description of task 1',
+//     dueDate=1735779098988.348,
+//     status=TaskStatus.NOT_STARTED
+// )
+//
+// data.push(task);
 
 /**
  * Handle routing for the application
@@ -42,7 +42,7 @@ const handleRouting = (request, response) => {
                     data.map(task => task.getTask())
                 )
                 response.write(JSON.stringify(taskResponse.getResponse()));
-            } else if ( request.url.split('/').length > 2) {
+            } else if ( urlPaths.length > 2) {
                 if (Boolean(urlPaths[2])) {
                     const taskId = parseInt(urlPaths[2]);
                     const task = data.find( task => task.id === taskId);
@@ -76,22 +76,51 @@ const handleRouting = (request, response) => {
                     const { title, description, dueDate, status } = JSON.parse(chunk);
                     const task = new Task(title, description, dueDate, status);
                     data.push(task);
+                    const taskResponse = new Response(
+                        request,
+                        201,
+                        'Task created successfully',
+                        task.getTask()
+                    )
+                    response.setHeader('Content-Type', 'application/json');
+                    response.writeHead(201);
+                    response.write(JSON.stringify(taskResponse.getResponse()));
+                    response.end();
                 });
-                response.setHeader('Content-Type', 'application/json');
-                response.writeHead(201);
-                const taskResponse = new Response(
-                    request,
-                    201,
-                    'Task created successfully',
-                    task.getTask()
-                )
-                response.write(JSON.stringify(taskResponse.getResponse()));
             }
-            response.end();
             break;
         case 'PUT':
-            console.log('PUT request');
-            response.end();
+            if (urlPaths.length > 2) {
+                if (Boolean(urlPaths[2])) {
+                    const taskId = parseInt(urlPaths[2]);
+                    const task = data.find(task => task.id === taskId);
+                    if (task) {
+                        request.on('data', chunk => {
+                            const {title, description, dueDate, status} = JSON.parse(chunk);
+                            task.update(title, description, dueDate, status);
+                        });
+                        response.setHeader('Content-Type', 'application/json');
+                        response.writeHead(200);
+                        const taskResponse = new Response(
+                            request,
+                            200,
+                            'Task updated successfully',
+                            task.getTask()
+                        )
+                        response.write(JSON.stringify(taskResponse.getResponse()));
+                        response.end();
+                    } else {
+                        response.writeHead(404);
+                        const taskResponse = new Response(
+                            request,
+                            404,
+                            'Task not found',
+                            {}
+                        )
+                        response.write(JSON.stringify(taskResponse.getResponse()));
+                    }
+                }
+            }
             break;
         case 'DELETE':
             console.log('DELETE request');
